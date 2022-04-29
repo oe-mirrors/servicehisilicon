@@ -755,6 +755,10 @@ eServiceHisilicon::eServiceHisilicon(eServiceReference ref):
 	}
 	else
 		filename = m_ref.path.c_str();
+
+	if(!m_ref.url.empty())
+		filename = m_ref.url.c_str();
+
 	const char *ext = strrchr(filename, '.');
 	if (!ext)
 		ext = filename + strlen(filename);
