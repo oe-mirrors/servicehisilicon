@@ -234,7 +234,7 @@ int eStaticServiceHisiliconInfo::getInfo(const eServiceReference &ref, int w)
 	{
 	case iServiceInformation::sTimeCreate:
 		{
-			struct stat s;
+			struct stat s = {};
 			if (stat(ref.path.c_str(), &s) == 0)
 			{
 				return s.st_mtime;
@@ -243,7 +243,7 @@ int eStaticServiceHisiliconInfo::getInfo(const eServiceReference &ref, int w)
 		break;
 	case iServiceInformation::sFileSize:
 		{
-			struct stat s;
+			struct stat s = {};
 			if (stat(ref.path.c_str(), &s) == 0)
 			{
 				return s.st_size;
@@ -256,7 +256,7 @@ int eStaticServiceHisiliconInfo::getInfo(const eServiceReference &ref, int w)
 
 long long eStaticServiceHisiliconInfo::getFileSize(const eServiceReference &ref)
 {
-	struct stat s;
+	struct stat s = {};
 	if (stat(ref.path.c_str(), &s) == 0)
 	{
 		return s.st_size;
@@ -716,7 +716,7 @@ eServiceHisilicon::eServiceHisilicon(eServiceReference ref):
 	m_seekable = 0;
 	m_bufferpercentage = 0;
 
-	m_useragent = "Enigma2 HbbTV/1.1.1 (+PVR+RTSP+DL;OpenPLi;;;)";
+	m_useragent = "Enigma2 HbbTV/1.1.1 (+PVR+RTSP+DL;OpenATV;;;)";
 	m_extra_headers = "";
 	m_download_buffer_path = "";
 	m_prev_decoder_time = -1;
@@ -896,7 +896,12 @@ void eServiceHisilicon::updateEpgCacheNowNext()
 
 DEFINE_REF(eServiceHisilicon);
 
+
+#if SIGCXX_MAJOR_VERSION == 2
 RESULT eServiceHisilicon::connectEvent(const sigc::slot2<void,iPlayableService*,int> &event, ePtr<eConnection> &connection)
+#else
+RESULT eServiceHisilicon::connectEvent(const sigc::slot<void(iPlayableService*,int)> &event, ePtr<eConnection> &connection)
+#endif
 {
 	connection = new eConnection((iPlayableService*)this, m_event.connect(event));
 	return 0;
@@ -979,7 +984,7 @@ RESULT eServiceHisilicon::setFastForward(int ratio)
 	return 0;
 }
 
-		// iPausableService
+// iPausableService
 RESULT eServiceHisilicon::pause()
 {
 	if (m_state != stRunning)
@@ -1123,6 +1128,7 @@ RESULT eServiceHisilicon::getName(std::string &name)
 	}
 	else
 		name = title;
+
 	return 0;
 }
 
@@ -2075,7 +2081,7 @@ PyObject *eServiceHisilicon::getCutList()
 	{
 		ePyObject tuple = PyTuple_New(2);
 		PyTuple_SET_ITEM(tuple, 0, PyLong_FromLongLong(i->where));
-		PyTuple_SET_ITEM(tuple, 1, PyInt_FromLong(i->what));
+		PyTuple_SET_ITEM(tuple, 1, PyLong_FromLong(i->what));
 		PyList_Append(list, tuple);
 		Py_DECREF(tuple);
 	}
