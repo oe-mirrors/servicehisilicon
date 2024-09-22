@@ -9,6 +9,12 @@ AM_PATH_PYTHON
 AX_PYTHON_DEVEL
 AC_LANG(C++)
 AX_CXX_COMPILE_STDCXX([17], [ext], [mandatory])
+
+dnl versions of libsigc
+AC_ARG_WITH(libsigcversion,
+	AS_HELP_STRING([--with-libsigcversion],[use libsigc version (major.minor)]),
+	[LIBSIGC_MAJORMINOR=$withval],[LIBSIGC_MAJORMINOR=2.0])
+
 PKG_CHECK_MODULES(ENIGMA2, enigma2)
 
 AC_DEFINE([DEBUG])
