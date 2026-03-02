@@ -240,8 +240,29 @@ RESULT eStaticServiceHisiliconInfo::getName(const eServiceReference &ref, std::s
 
 int eStaticServiceHisiliconInfo::getLength(const eServiceReference &ref)
 {
+	constexpr int MPEG_TIMEBASE = 90000;
+
+	if (m_parser.parseMeta(ref.path) == 0)
+		return static_cast<int>(m_parser.m_length / MPEG_TIMEBASE);
+
+	/* Fallback: read CUT_TYPE_LENGTH from .cuts file */
+	std::string filename = ref.path + ".cuts";
+	std::ifstream file(filename, std::ios::binary);
+
+	if (!file)
+		return -1;
+
+	uint64_t where;
+	uint32_t what;
+
+	while (file.read(reinterpret_cast<char*>(&where), sizeof(where)) && file.read(reinterpret_cast<char*>(&what), sizeof(what))) {
+		if (ntohl(what) == 5) // CUT_TYPE_LENGTH
+			return static_cast<int>(be64toh(where) / MPEG_TIMEBASE);
+	}
+
 	return -1;
 }
+
 
 int eStaticServiceHisiliconInfo::getInfo(const eServiceReference &ref, int w)
 {
