@@ -255,6 +255,7 @@ private:
 	bool m_buffering;
 	/* cuesheet load check */
 	bool m_cuesheet_loaded;
+	pts_t m_last_seek_pos;
 	/* servicemHisilicon chapter TOC support CVR */
 	bufferInfo m_bufferInfo;
 	errorInfo m_errorInfo;
