@@ -2294,11 +2294,8 @@ void eServiceHisilicon::saveCuesheet()
 		m_cue_entries.insert(cueEntry(old_last, 4));
 	}
 	if ((m_cutlist_enabled & 2) == 0 && m_last_seek_pos > 900000) {
-		pts_t media_length = (pts_t)(fileinfo.s64Duration * 90LL);
-		if (!media_length || m_last_seek_pos < (media_length - 900000)) {
-			m_cue_entries.insert(cueEntry(m_last_seek_pos, 3));
-			eDebug("[eServiceHisilicon] last play position saved: %lld", (long long)m_last_seek_pos);
-		}
+		m_cue_entries.insert(cueEntry(m_last_seek_pos, 3));
+		eDebug("[eServiceHisilicon] last play position saved: %lld", (long long)m_last_seek_pos);
 	}
 
 	/* Update CUT_TYPE_LENGTH with the media length */
