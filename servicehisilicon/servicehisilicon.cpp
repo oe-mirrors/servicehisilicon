@@ -2241,6 +2241,8 @@ void eServiceHisilicon::loadCuesheet()
 
 	m_cue_entries.clear();
 
+	bool nativeCuesheetSupport = eConfigManager::getConfigBoolValue("config.usage.nativeCuesheetSupport", false);
+
 	FILE *f = fopen(filename.c_str(), "rb");
 
 	if (f)
@@ -2258,8 +2260,17 @@ void eServiceHisilicon::loadCuesheet()
 			where = be64toh(where);
 			what = ntohl(what);
 
-			if (what < 256)
-				m_cue_entries.insert(cueEntry(where, what));
+			if(nativeCuesheetSupport)
+			{
+				if (what < 256)
+					m_cue_entries.insert(cueEntry(where, what));
+			}
+			else
+			{
+				if (what > 3)
+					break;
+			}
+
 		}
 		fclose(f);
 		eDebug("[eServiceHisilicon] cuts file has %zd entries", m_cue_entries.size());
@@ -2279,37 +2290,44 @@ void eServiceHisilicon::saveCuesheet()
 		return;
 	filename.append(".cuts");
 
-	/* Save old CUT_TYPE_LAST as CUT_TYPE_SAVEDLAST before replacing it */
-	pts_t old_last = 0;
-	for (auto i = m_cue_entries.begin(); i != m_cue_entries.end();) {
-		if (i->what == 3) { /* CUT_TYPE_LAST */
-			old_last = i->where;
-			i = m_cue_entries.erase(i);
-		} else if (i->what == 4) { /* CUT_TYPE_SAVEDLAST */
-			i = m_cue_entries.erase(i);
-		} else
-			++i;
-	}
-	if (old_last > 0) {
-		m_cue_entries.insert(cueEntry(old_last, 4));
-	}
-	if ((m_cutlist_enabled & 2) == 0 && m_last_seek_pos > 900000) {
-		m_cue_entries.insert(cueEntry(m_last_seek_pos, 3));
-		eDebug("[eServiceHisilicon] last play position saved: %lld", (long long)m_last_seek_pos);
-	}
+	bool nativeCuesheetSupport = eConfigManager::getConfigBoolValue("config.usage.nativeCuesheetSupport", false);
 
-	/* Update CUT_TYPE_LENGTH with the media length */
-	for (auto i = m_cue_entries.begin(); i != m_cue_entries.end();) {
-		if (i->what == 5) /* CUT_TYPE_LENGTH */
-			i = m_cue_entries.erase(i);
-		else
-			++i;
-	}
+	if (nativeCuesheetSupport)
 	{
-		pts_t media_length = (pts_t)(fileinfo.s64Duration * 90LL);
-		if (media_length > 0) {
-			m_cue_entries.insert(cueEntry(media_length, 5));
+
+		/* Save old CUT_TYPE_LAST as CUT_TYPE_SAVEDLAST before replacing it */
+		pts_t old_last = 0;
+		for (auto i = m_cue_entries.begin(); i != m_cue_entries.end();) {
+			if (i->what == 3) { /* CUT_TYPE_LAST */
+				old_last = i->where;
+				i = m_cue_entries.erase(i);
+			} else if (i->what == 4) { /* CUT_TYPE_SAVEDLAST */
+				i = m_cue_entries.erase(i);
+			} else
+				++i;
 		}
+		if (old_last > 0) {
+			m_cue_entries.insert(cueEntry(old_last, 4));
+		}
+		if ((m_cutlist_enabled & 2) == 0 && m_last_seek_pos > 900000) {
+			m_cue_entries.insert(cueEntry(m_last_seek_pos, 3));
+			eDebug("[eServiceHisilicon] last play position saved: %lld", (long long)m_last_seek_pos);
+		}
+
+		/* Update CUT_TYPE_LENGTH with the media length */
+		for (auto i = m_cue_entries.begin(); i != m_cue_entries.end();) {
+			if (i->what == 5) /* CUT_TYPE_LENGTH */
+				i = m_cue_entries.erase(i);
+			else
+				++i;
+		}
+		{
+			pts_t media_length = (pts_t)(fileinfo.s64Duration * 90LL);
+			if (media_length > 0) {
+				m_cue_entries.insert(cueEntry(media_length, 5));
+			}
+		}
+
 	}
 
 	/* do not save to file if there are no cuts */
